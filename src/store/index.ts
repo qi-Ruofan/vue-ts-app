@@ -1,32 +1,37 @@
-// 1
 import { createStore, useStore as baseUseStore } from 'vuex'
-import users from './modules/users'
-import news from './modules/news'
-import checks from './modules/checks'
-import signs from './modules/signs'
-// 2
-import type { InjectionKey } from 'vue'
 import type { Store } from 'vuex'
+import users from './modules/users'
+import signs from './modules/signs'
+import checks from './modules/checks'
+import news from './modules/news'
 import type { UsersState } from './modules/users'
 import type { SignsState } from './modules/signs'
 import type { ChecksState } from './modules/checks'
 import type { NewsState } from './modules/news'
+import type { InjectionKey } from 'vue'
+import VuexPersistence from 'vuex-persist'
 
-// 5
-export interface State {}
-// 6
-interface StateAll extends State {
-  users: UsersState
-  news: NewsState
-  signs: SignsState
-  checks: ChecksState
+export interface State {
 }
-// 4
+
+export interface StateAll extends State {
+  users: UsersState,
+  signs: SignsState,
+  checks: ChecksState,
+  news: NewsState
+}
+
+const vuexLocal = new VuexPersistence<State>({
+  storage: window.localStorage,
+  reducer: (state) => ({ users: { token: (state as StateAll).users.token } }),
+})
+
+export const key: InjectionKey<Store<StateAll>> = Symbol()
+
 export function useStore () {
   return baseUseStore(key)
 }
-// 3
-export const key: InjectionKey<Store<StateAll>> = Symbol()
+
 export default createStore({
   state: {
   },
@@ -41,5 +46,6 @@ export default createStore({
     signs,
     checks,
     news
-  }
+  },
+  plugins: [vuexLocal.plugin]
 })

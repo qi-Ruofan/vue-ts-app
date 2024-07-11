@@ -7,7 +7,6 @@ import App from './App.vue'
 import router from './router'
 import store, { key } from './store'
 
-
 const app = createApp(App)
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)

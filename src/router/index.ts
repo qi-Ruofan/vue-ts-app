@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
-
+import store from '@/store'
+import type { StateAll } from '@/store'
+import _ from 'lodash'
 declare module 'vue-router' {
   interface RouteMeta {
     menu?: boolean
@@ -10,13 +12,8 @@ declare module 'vue-router' {
 }
 const routes: Array<RouteRecordRaw> = [
   {
-    path: '/login',
-    name: 'Login',
-    component: () => import('@/views/Login/Login.vue')
-  },
-  {
     path: '/',
-    name: 'Home',
+    name: 'home',
     component: () => import('@/views/Home/Home.vue'),
     redirect: '/sign',
     meta: {
@@ -27,8 +24,8 @@ const routes: Array<RouteRecordRaw> = [
     },
     children: [
       {
-        path: '/check',
-        name: 'Check',
+        path: 'check',
+        name: 'check',
         component: () => import('@/views/Check/Check.vue'),
         meta: {
           menu: true,
@@ -38,8 +35,8 @@ const routes: Array<RouteRecordRaw> = [
         },
       },
       {
-        path: '/apply',
-        name: 'Apply',
+        path: 'apply',
+        name: 'apply',
         component: () => import('@/views/Apply/Apply.vue'),
         meta: {
           menu: true,
@@ -49,8 +46,8 @@ const routes: Array<RouteRecordRaw> = [
         },
       },
       {
-        path: '/exception',
-        name: 'Exception',
+        path: 'exception',
+        name: 'exception',
         component: () => import('@/views/Exception/Exception.vue'),
         meta: {
           menu: true,
@@ -60,8 +57,8 @@ const routes: Array<RouteRecordRaw> = [
         },
       },
       {
-        path: '/sign',
-        name: 'Sign',
+        path: 'sign',
+        name: 'sign',
         component: () => import('@/views/Sign/Sign.vue'),
         meta: {
           menu: true,
@@ -72,11 +69,45 @@ const routes: Array<RouteRecordRaw> = [
       }
     ]
   },
+  {
+    path: '/login',
+    name: 'login',
+    component: () => import('@/views/Login/Login.vue')
+  }
 ]
 
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
   routes
 })
+
+// 权限
+router.beforeEach((to, from, next)=>{
+  const token = (store.state as StateAll).users.token;
+  const infos = (store.state as StateAll).users.infos;
+  if( to.meta.auth && _.isEmpty(infos) ){
+    if(token){
+      store.dispatch('users/infos').then((res)=>{
+        if(res.data.errcode === 0){
+          store.commit('users/updateInfos', res.data.infos)
+          next()
+        }
+      });
+    }
+    else{
+      next('/login');
+    }
+  }
+  else{
+    if( token && to.path === '/login' ){
+      next('/');
+    }
+    else{
+      next();
+    }
+  }
+
+})
+
 
 export default router
