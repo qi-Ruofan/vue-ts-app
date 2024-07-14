@@ -24,6 +24,41 @@ const routes: Array<RouteRecordRaw> = [
     },
     children: [
       {
+        path: 'sign',
+        name: 'sign',
+        component: () => import('@/views/Sign/Sign.vue'),
+        meta: {
+          menu: true,
+          title: '在线打卡签到',
+          icon: 'calendar',
+          auth: true
+        },
+        async beforeEnter(to, from, next) {
+          const usersInfos = (store.state as StateAll).users.infos;
+          const signsInfos = (store.state as StateAll).signs.infos;
+          const newsInfo = (store.state as StateAll).news.info
+            if(_.isEmpty(signsInfos)) {
+              const res = await store.dispatch('signs/getTime', { userid: usersInfos._id })
+              if(res.data.errcode === 0) {
+                store.commit('signs/updateInfos', res.data.infos)
+              }
+              else {
+                return
+              }
+            } 
+            if(_.isEmpty(newsInfo)) {
+              const res = await store.dispatch('news/getRemind', { userid: usersInfos._id })
+              if(res.data.errcode === 0) {
+                store.commit('news/updateInfo', res.data.info)
+              }
+              else {
+                return
+              }
+            }
+          next()
+        }
+      },
+      {
         path: 'check',
         name: 'check',
         component: () => import('@/views/Check/Check.vue'),
@@ -33,6 +68,30 @@ const routes: Array<RouteRecordRaw> = [
           icon: 'finished',
           auth: true
         },
+        async beforeEnter(to, from, next) {
+          const usersInfos = (store.state as StateAll).users.infos;
+          const checkList = (store.state as StateAll).checks.checkList;
+          const newsInfo = (store.state as StateAll).news.info
+          if(_.isEmpty(checkList)) {
+            const res = await store.dispatch('checks/getApplyList', { approverid: usersInfos._id })
+            if(res.data.errcode === 0) {
+              store.commit('checks/updateCheckList', res.data.rets)
+            }
+            else {
+              return
+            }
+          }
+          if(newsInfo.approver) {
+            const res = await store.dispatch('news/putRemind', {userid: usersInfos._id, approver: false})
+            if(res.data.errcode === 0) {
+              store.commit('news/updateInfo', res.data.info)
+            }
+            else {
+              return
+            }
+          }
+          next()
+        }
       },
       {
         path: 'apply',
@@ -44,6 +103,30 @@ const routes: Array<RouteRecordRaw> = [
           icon: 'document-add',
           auth: true
         },
+        async beforeEnter(to, form, next) {
+          const usersInfos = (store.state as StateAll).users.infos;
+          const checksApplyList = (store.state as StateAll).checks.applyList
+          const newsInfo = (store.state as StateAll).news.info
+          if(_.isEmpty(checksApplyList)) {
+            const res = await store.dispatch('checks/getApplyList', { applicantid: usersInfos._id })
+            if(res.data.errcode === 0) {
+              store.commit('checks/updateApplyList', res.data.rets)
+            }
+            else {
+              return
+            }
+          }
+          if(newsInfo.applicant) {
+            const res = await store.dispatch('news/putRemind', {userid: usersInfos._id, applicant: false})
+            if(res.data.errcode === 0) {
+              store.commit('news/updateInfo', res.data.info)
+            }
+            else {
+              return
+            }
+          }
+          next()
+        }
       },
       {
         path: 'exception',
@@ -55,52 +138,41 @@ const routes: Array<RouteRecordRaw> = [
           icon: 'warning',
           auth: true
         },
-        beforeEnter(to, from, next) {
+        async beforeEnter(to, from, next) {
           const usersInfos = (store.state as StateAll).users.infos;
           const signsInfos = (store.state as StateAll).signs.infos;
-
-            if(_.isEmpty(signsInfos)) {
-              store.dispatch('signs/getTime', { userid: usersInfos._id }).then(res => {
-                if(res.data.errcode === 0) {
-                  store.commit('signs/updateInfos', res.data.infos)
-                  next()
-                }
-              })
-            } 
-            else {
+          const checksApplyList = (store.state as StateAll).checks.applyList
+          const newsInfo = (store.state as StateAll).news.info
+          if(_.isEmpty(signsInfos)) {
+            const res = await store.dispatch('signs/getTime', { userid: usersInfos._id })
+            if(res.data.errcode === 0) {
+              store.commit('signs/updateInfos', res.data.infos)
               next()
             }
-
-        }
-      },
-      {
-        path: 'sign',
-        name: 'sign',
-        component: () => import('@/views/Sign/Sign.vue'),
-        meta: {
-          menu: true,
-          title: '在线打卡签到',
-          icon: 'calendar',
-          auth: true
-        },
-        beforeEnter(to, from, next) {
-          const usersInfos = (store.state as StateAll).users.infos;
-          const signsInfos = (store.state as StateAll).signs.infos;
-
-            if(_.isEmpty(signsInfos)) {
-              store.dispatch('signs/getTime', { userid: usersInfos._id }).then(res => {
-                if(res.data.errcode === 0) {
-                  store.commit('signs/updateInfos', res.data.infos)
-                  next()
-                }
-              })
-            } 
             else {
-              next()
+              return
             }
-
+          } 
+          if(_.isEmpty(checksApplyList)) {
+            const res = await store.dispatch('checks/getApplyList', { applicantid: usersInfos._id })
+            if(res.data.errcode === 0) {
+              store.commit('checks/updateApplyList', res.data.rets)
+            }
+            else {
+              return
+            }
+          }
+          if(_.isEmpty(newsInfo)) {
+            const res = await store.dispatch('news/getRemind', { userid: usersInfos._id })
+            if(res.data.errcode === 0) {
+              store.commit('news/updateInfo', res.data.info)
+            }
+            else {
+              return
+            }
+          }
+          next()
         }
- 
       }
     ]
   },

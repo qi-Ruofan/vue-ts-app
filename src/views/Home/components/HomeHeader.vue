@@ -7,12 +7,14 @@
     </span>
     <span class="home-header-title">在线考勤系统</span>
     <el-dropdown>
-      <el-badge class="home-header-badge">
+      <el-badge :is-dot="isDot" class="home-header-badge">
         <el-icon :size="20"><Bell /></el-icon>
       </el-badge>
       <template #dropdown>
         <el-dropdown-menu>
-          <el-dropdown-item>暂无消息</el-dropdown-item>
+          <el-dropdown-item v-if="newsInfo.applicant" @click="handleNavigate('/apply')">有审批结果消息</el-dropdown-item>
+          <el-dropdown-item v-if="newsInfo.approver" @click="handleNavigate('/check')">有审批请求消息</el-dropdown-item>
+          <el-dropdown-item v-if="!newsInfo.applicant && !newsInfo.approver">暂无消息</el-dropdown-item>
         </el-dropdown-menu>
       </template>
     </el-dropdown>
@@ -35,14 +37,26 @@
 <script lang='ts' setup>
 import { useStore } from '@/store';
 import { computed } from 'vue';
+import { useRouter } from 'vue-router';
 const store = useStore()
+const router = useRouter()
 const head = computed(() => store.state.users.infos.head)
 const name = computed(() => store.state.users.infos.name)
+
+const newsInfo = computed(() => store.state.news.info)
+const isDot = computed(() => newsInfo.value.applicant || newsInfo.value.approver)
+
 const handleLogout = () => {
   store.commit('users/clearToken')
   setTimeout(() => {
     window.location.replace('/login')
   }, 500)
+}
+
+const handleNavigate = (path: string) => {
+  router.push({
+    path: path
+  })
 }
 </script>
 
